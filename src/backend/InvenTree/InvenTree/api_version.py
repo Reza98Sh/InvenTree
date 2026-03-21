@@ -1,10 +1,15 @@
 """InvenTree API version information."""
 
 # InvenTree API version
-INVENTREE_API_VERSION = 467
+INVENTREE_API_VERSION = 468
 """Increment this API version number whenever there is a significant change to the API that any clients need to know about."""
 
 INVENTREE_API_TEXT = """
+
+v468 -> 2026-02-13 : https://github.com/inventree/InvenTree/pull/
+    - Expose InvenTreeImage model to api/image API endpoints
+    - Adds 'image_url' and 'thumbnail_url' fields to relevant API serializers
+    - Updates Part and Company API endpoints to use new image architecture
 
 v467 -> 2026-03-20 : https://github.com/inventree/InvenTree/pull/11573
     - Fix definition for the "parent" field on the StockItemSerializer

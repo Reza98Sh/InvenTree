@@ -101,7 +101,6 @@ class Company(
         phone: contact phone number
         email: contact email address
         link: Secondary URL e.g. for link to internal Wiki page
-        image: Company image / logo
         notes: Extra notes about the company
         active: boolean value, is this company active
         is_customer: boolean value, is this company a customer
@@ -111,6 +110,8 @@ class Company(
         tax_id: Tax ID for the company
     """
 
+    # Each company has only an image
+    single_image: bool = True
     IMAGE_RENAME = rename_company_image
     IMPORT_ID_FIELDS = ['name']
 
