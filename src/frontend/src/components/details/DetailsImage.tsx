@@ -24,10 +24,11 @@ import {
 } from '@mantine/dropzone';
 import { useHover } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
+import { useEffect, useMemo, useState } from 'react';
+
 import { showNotification } from '@mantine/notifications';
 import { IconCameraPlus, IconDotsVertical } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
 import { api } from '../../App';
 import { InvenTreeIcon } from '../../functions/icons';
 import { showApiErrorMessage } from '../../functions/notifications';
@@ -109,13 +110,57 @@ function UploadModal({
   const [currentFile, setCurrentFile] = useState<FileWithPath | null>(null);
   let uploading = false;
 
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const clipboardItems = event.clipboardData?.items;
+
+      if (!clipboardItems) {
+        return;
+      }
+
+      const imageItem = Array.from(clipboardItems).find((item) =>
+        item.type.startsWith('image/')
+      );
+
+      if (!imageItem) {
+        return;
+      }
+
+      const imageFile = imageItem.getAsFile();
+
+      if (!imageFile) {
+        return;
+      }
+
+      const fileExtension = imageFile.type.split('/')[1] || 'png';
+      const pastedFile = new File(
+        [imageFile],
+        `clipboard-image.${fileExtension}`,
+        {
+          type: imageFile.type
+        }
+      ) as FileWithPath;
+
+      setCurrentFile(pastedFile);
+      event.preventDefault();
+    };
+
+    document.addEventListener('paste', handlePaste);
+
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, []);
+
   // Components to show in the Dropzone when no file is selected
   const noFileIdle = (
     <Group>
       <InvenTreeIcon icon='photo' iconProps={{ size: '3.2rem', stroke: 1.5 }} />
       <div>
         <Text size='xl' inline>
-          <Trans>Drag and drop to upload</Trans>
+          <Trans>
+            Drag and drop to upload, or paste an image from the clipboard
+          </Trans>
         </Text>
         <Text size='sm' c='dimmed' inline mt={7}>
           <Trans>Click to select file(s)</Trans>

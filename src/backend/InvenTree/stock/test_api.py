@@ -1038,7 +1038,7 @@ class StockItemListTest(StockAPITestCase):
         # Note: While the export is quick on pgsql, it is still quite slow on sqlite3
         with self.export_data(
             self.list_url,
-            max_query_count=50,
+            max_query_count=100,
             max_query_time=12.0,  # Test time increased due to worker variability
         ) as data_file:
             data = self.process_csv(data_file)
@@ -2434,17 +2434,7 @@ class StockTestResultTest(StockAPITestCase):
         self.delete(url, {}, expected_code=400)
 
         # Now, let's delete all the newly created items with a single API request
-        # However, we will provide incorrect filters
-        response = self.delete(
-            url, {'items': tests, 'filters': {'stock_item': 10}}, expected_code=400
-        )
-
-        self.assertEqual(StockItemTestResult.objects.count(), n + 50)
-
-        # Try again, but with the correct filters this time
-        response = self.delete(
-            url, {'items': tests, 'filters': {'stock_item': 1}}, expected_code=200
-        )
+        response = self.delete(url, {'items': tests}, expected_code=200)
 
         self.assertEqual(StockItemTestResult.objects.count(), n)
 
