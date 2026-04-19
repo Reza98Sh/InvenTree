@@ -537,6 +537,19 @@ class Order(
         related_name='+',
     )
 
+    @property
+    def company(self):
+        """Return the company associated with this order.
+
+        This method must be implemented by any subclass, as the 'company' field may be named differently for different order types (e.g. supplier vs customer).
+        """
+        raise NotImplementedError(f'company() method not implemented for {__class__}')
+
+    @property
+    def order_address(self):
+        """Return the Address associated with this order."""
+        return self.address or self.company.primary_address
+
     @classmethod
     def get_status_class(cls):
         """Return the enumeration class which represents the 'status' field for this model."""
@@ -1038,6 +1051,29 @@ class PurchaseOrder(TotalPriceMixin, Order):
 
             base_part = supplier_part.part
 
+            # Update the line item quantity
+            line.received += quantity
+            line_items_to_update.append(line)
+
+            # Extract optional serial numbers
+            serials = item.get('serials', None)
+
+            if serials and type(serials) is list and len(serials) > 0:
+                serialize = True
+            else:
+                serialize = False
+                serials = [None]
+
+            if base_part.virtual:
+                # Virtual parts are not received into stock, so skip the rest of the loop
+
+                if serialize:
+                    raise ValidationError(
+                        _('Serial numbers cannot be assigned to virtual parts')
+                    )
+
+                continue
+
             stock_location = item.get('location', location) or line.get_destination()
 
             # Calculate the received quantity in base part units
@@ -1051,15 +1087,6 @@ class PurchaseOrder(TotalPriceMixin, Order):
                     purchase_price = convert_money(purchase_price, default_currency)
             else:
                 purchase_price = None
-
-            # Extract optional serial numbers
-            serials = item.get('serials', None)
-
-            if serials and type(serials) is list and len(serials) > 0:
-                serialize = True
-            else:
-                serialize = False
-                serials = [None]
 
             # Construct dataset for creating a new StockItem instances
             stock_data = {
@@ -1143,10 +1170,6 @@ class PurchaseOrder(TotalPriceMixin, Order):
                     new_item.assign_barcode(barcode_data=barcode, save=False)
 
                 bulk_create_items.append(new_item)
-
-            # Update the line item quantity
-            line.received += quantity
-            line_items_to_update.append(line)
 
         # Bulk create new stock items
         if len(bulk_create_items) > 0:
@@ -1783,6 +1806,15 @@ class OrderLineItem(InvenTree.models.InvenTreeMetadataModel):
         if self.price:
             return self.quantity * self.price
 
+    line = models.CharField(
+        max_length=20,
+        blank=True,
+        default='',
+        null=False,
+        verbose_name=_('Line Number'),
+        help_text=_('Line number for this item (optional)'),
+    )
+
     reference = models.CharField(
         max_length=100,
         blank=True,
@@ -2224,6 +2256,7 @@ class SalesOrderShipmentReportContext(report.mixins.BaseReportContext, TypedDict
 
 
 class SalesOrderShipment(
+    InvenTree.models.InvenTreeParameterMixin,
     InvenTree.models.InvenTreeAttachmentMixin,
     InvenTree.models.InvenTreeBarcodeMixin,
     InvenTree.models.InvenTreeNotesMixin,
@@ -2368,9 +2401,16 @@ class SalesOrderShipment(
     def address(self) -> Address:
         """Return the shipping address for this shipment.
 
-        If no specific shipment address is assigned, return the address from the order.
+        Lookup priority:
+        - Specific address assigned to this shipment
+        - Address assigned to the order
+        - Primary address of the customer
         """
-        return self.shipment_address or self.order.address
+        return (
+            self.shipment_address
+            or self.order.address
+            or self.order.customer.primary_address
+        )
 
     def is_checked(self) -> bool:
         """Return True if this shipment has been checked."""
