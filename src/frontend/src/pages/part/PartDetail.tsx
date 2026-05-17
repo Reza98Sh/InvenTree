@@ -583,22 +583,25 @@ export default function PartDetail() {
 
     return part ? (
       <ItemDetailsGrid>
-        <Stack gap='xs'>
+        <Stack>
           <Grid grow>
-            <DetailsImage
-              appRole={UserRoles.part}
-              imageActions={{
-                selectExisting: true,
-                downloadImage: true,
-                uploadFile: true,
-                deleteFile: true
-              }}
-              src={part.image}
-              thumbnail={part.thumbnail}
-              apiPath={apiUrl(ApiEndpoints.part_list, part.pk)}
-              refresh={refreshInstance}
-              pk={part.pk}
-            />
+            <Grid.Col pos='relative' span={{ base: 12, sm: 3 }}>
+              <DetailsImage
+                appRole={UserRoles.part}
+                object_id={part.pk}
+                model_type={ModelType.part}
+                refresh={refreshInstance}
+                AddImageActions={{
+                  selectExisting: true,
+                  uploadNewImage: true
+                }}
+                EditImageActions={{
+                  deleteImage: true,
+                  setAsPrimary: true
+                }}
+                multiple={true}
+              />
+            </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 8 }}>
               <DetailsTable fields={tl} item={data} />
             </Grid.Col>
@@ -1005,7 +1008,10 @@ export default function PartDetail() {
     preFormContent: (
       <Alert color='red' title={t`Deleting this part cannot be reversed`}>
         <Stack gap='xs'>
-          <Thumbnail src={part.thumbnail ?? part.image} text={part.full_name} />
+          <Thumbnail
+            src={part?.thumbnail ?? part?.image}
+            text={part.full_name}
+          />
         </Stack>
       </Alert>
     )
@@ -1137,8 +1143,7 @@ export default function PartDetail() {
               ) : undefined
             }
             subtitle={part.description}
-            imageUrl={part.image}
-            thumbnailUrl={part.thumbnail}
+            imageUrl={part?.image}
             badges={badges}
             breadcrumbs={
               user.hasViewRole(UserRoles.part_category)

@@ -1,10 +1,14 @@
 """InvenTree API version information."""
 
 # InvenTree API version
-INVENTREE_API_VERSION = 487
+INVENTREE_API_VERSION = 488
 """Increment this API version number whenever there is a significant change to the API that any clients need to know about."""
 
 INVENTREE_API_TEXT = """
+
+v488 -> 2026-02-13 : https://github.com/inventree/InvenTree/pull/10484
+    - Expose InvenTreeImage model to api/image API endpoints
+    - Adds 'image_url' and 'thumbnail_url' fields to relevant API serializers
 
 v487 -> 2026-05-15 : https://github.com/inventree/InvenTree/pull/11948
     - Make SelectionList default nullable
@@ -122,7 +126,6 @@ v454 -> 2026-02-19 : https://github.com/inventree/InvenTree/pull/11379
 
 v453 -> 2026-02-11 : https://github.com/inventree/InvenTree/pull/11244
     - Adds (internal) endpoint to end a observability tooling session
-
 v452 -> 2026-02-10 : https://github.com/inventree/InvenTree/pull/11276
     - Adds "install_into_detail" field to the BuildItem API endpoint
 

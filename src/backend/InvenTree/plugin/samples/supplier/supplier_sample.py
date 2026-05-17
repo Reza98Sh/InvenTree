@@ -127,8 +127,7 @@ class SampleSupplierPlugin(SupplierMixin, InvenTreePlugin):
             ):
                 file, fmt = self.download_image(data['image_url'])
                 filename = f'part_{part.pk}_image.{fmt.lower()}'
-                part.image.save(filename, file)
-
+                part.save_image(file, filename)
             # link other variants if they exist in our inventree database
             if len(data['variants']):
                 # search for other parts that may already have a template part associated
@@ -143,7 +142,7 @@ class SampleSupplierPlugin(SupplierMixin, InvenTreePlugin):
                         'name': data['sku'].replace(data['material'] + '-', ''),
                         'description': data['name'].replace(' ' + data['material'], ''),
                         'link': data['link'],
-                        'image': part.image.name,
+                        'image': part.image,
                         'is_template': True,
                         **kwargs,
                     },
